@@ -43,7 +43,7 @@ export function WeatherHUD({ plantState, envState, locationName }: WeatherHUDPro
   });
 
   return (
-    <div className="glass-panel rounded-xl p-4 w-[240px] pointer-events-auto">
+    <div className="glass-panel rounded-xl p-4 w-[min(240px,calc(100vw-2rem))] max-w-full pointer-events-auto">
       <h3 className="text-xs font-semibold text-white/60 uppercase tracking-widest mb-3">Weather</h3>
 
       <div className="flex items-center gap-3 mb-3">

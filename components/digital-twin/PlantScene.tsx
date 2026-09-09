@@ -15,6 +15,8 @@ interface PlantSceneProps {
   onCameraViewCompleted: () => void;
   onSelect: (type: SelectionType) => void;
   selection: SelectionType;
+  manualLampOn?: boolean;
+  singlePlant?: boolean;
 }
 
 export function PlantScene({
@@ -24,8 +26,10 @@ export function PlantScene({
   onCameraViewCompleted,
   onSelect,
   selection,
+  manualLampOn = false,
+  singlePlant = false,
 }: PlantSceneProps) {
-  const plantPositions = [
+  const plantPositions = singlePlant ? [[0, 0, 0]] as const : [
     [-4.5, 0, -3.2],
     [-1.5, 0, -3.2],
     [1.5, 0, -3.2],
@@ -49,7 +53,7 @@ export function PlantScene({
   return (
     <Canvas
       shadows
-      camera={{ position: [3, 2.5, 5], fov: 50, near: 0.1, far: 100 }}
+      camera={{ position: singlePlant ? [0, 2.2, 6] : [3, 2.5, 5], fov: singlePlant ? 42 : 50, near: 0.1, far: 100 }}
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
       onPointerMissed={handleBackgroundClick}
@@ -59,6 +63,7 @@ export function PlantScene({
           timeOfDay={envState.timeOfDay}
           rainActive={envState.rainActive}
           windSpeed={envState.windSpeed}
+          manualLampOn={manualLampOn}
           soilMoisture={plantState.soilMoisture}
           onSoilSelect={handleSoilSelect}
           soilSelected={selection === "soil"}

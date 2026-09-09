@@ -1,6 +1,7 @@
 "use client";
 
-import { Focus, Eye, RotateCcw, CloudRain, Wind, Clock, Sun, Ruler, MapPin } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, ChevronUp, Focus, Eye, RotateCcw, CloudRain, Wind, Clock, Lightbulb, Ruler, MapPin } from "lucide-react";
 import { TimeOfDay, TIME_DISPLAY } from "@/lib/plant-state";
 import { CameraView } from "./CameraControls";
 
@@ -11,6 +12,8 @@ interface ControlPanelProps {
   onTimeChange: (time: TimeOfDay) => void;
   rainActive: boolean;
   onRainToggle: () => void;
+  manualLampOn: boolean;
+  onLampToggle: () => void;
   windSpeed: number;
   onWindChange: (speed: number) => void;
   plantHeight: number;
@@ -28,6 +31,8 @@ export function ControlPanel({
   onTimeChange,
   rainActive,
   onRainToggle,
+  manualLampOn,
+  onLampToggle,
   windSpeed,
   onWindChange,
   plantHeight,
@@ -37,12 +42,23 @@ export function ControlPanel({
   onLocationApply,
   onReset,
 }: ControlPanelProps) {
+  const [collapsed, setCollapsed] = useState(false);
   const timeOptions: TimeOfDay[] = ["sunrise", "morning", "noon", "afternoon", "sunset", "night"];
 
   return (
-    <div className="glass-panel rounded-xl p-4 pointer-events-auto">
-      <h3 className="text-xs font-semibold text-white/60 uppercase tracking-widest mb-3">Controls</h3>
+    <div className="glass-panel rounded-xl p-4 w-[min(320px,calc(100vw-2rem))] max-w-full max-h-full overflow-y-auto pointer-events-auto">
+      <button
+        type="button"
+        onClick={() => setCollapsed((value) => !value)}
+        className="w-full flex items-center justify-between mb-3 text-left"
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? "Expand controls" : "Collapse controls"}
+      >
+        <h3 className="text-xs font-semibold text-white/60 uppercase tracking-widest">Controls</h3>
+        {collapsed ? <ChevronDown className="w-4 h-4 text-white/60" /> : <ChevronUp className="w-4 h-4 text-white/60" />}
+      </button>
 
+      {!collapsed && <>
       {/* Camera Controls */}
       <div className="mb-4">
         <p className="text-[10px] text-white/40 uppercase tracking-wider mb-2">Camera</p>
@@ -127,6 +143,21 @@ export function ControlPanel({
         />
       </div>
 
+      {/* Manual lamp toggle */}
+      <div className="mb-4">
+        <button
+          onClick={onLampToggle}
+          className={`w-full py-2 rounded-md text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+            manualLampOn
+              ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+              : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
+          }`}
+        >
+          <Lightbulb className="w-3.5 h-3.5" />
+          {manualLampOn ? "Lamp On" : "Lamp Off"}
+        </button>
+      </div>
+
       {/* Crop Controls */}
       <div className="mb-4 space-y-4">
         <div>
@@ -178,6 +209,7 @@ export function ControlPanel({
         <RotateCcw className="w-3.5 h-3.5" />
         Reset Plant State
       </button>
+      </>}
     </div>
   );
 }

@@ -6,11 +6,13 @@ import { Sun } from "./Sun";
 import { Clouds } from "./Clouds";
 import { Rain } from "./Rain";
 import { Soil } from "./Soil";
+import { LampPost } from "./LampPost";
 
 interface EnvironmentProps {
   timeOfDay: TimeOfDay;
   rainActive: boolean;
   windSpeed: number;
+  manualLampOn: boolean;
   soilMoisture: number;
   onSoilSelect: () => void;
   soilSelected: boolean;
@@ -20,6 +22,7 @@ export function Environment({
   timeOfDay,
   rainActive,
   windSpeed,
+  manualLampOn,
   soilMoisture,
   onSoilSelect,
   soilSelected,
@@ -69,6 +72,9 @@ export function Environment({
 
       {/* Rain */}
       <Rain active={rainActive} />
+
+      {/* Automatically illuminates the plot when daylight is low. */}
+      <LampPost timeOfDay={timeOfDay} rainActive={rainActive} manualLampOn={manualLampOn} />
 
       {/* Fog */}
       <fog attach="fog" args={[fogColor, fogNear, fogFar]} />

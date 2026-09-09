@@ -237,17 +237,17 @@ export default function PlantHealthPage() {
   const imageTypeLabel = result.imageType.replace("_", " / ").replace("WHOLE_PLANT", "WHOLE PLANT").replace("MULTIPLE_PARTS", "MULTIPLE PARTS");
 
   return (
-    <main className="min-h-screen w-full bg-[#07111f] text-white">
+    <main className="h-screen max-h-screen w-full overflow-x-hidden overflow-y-auto overscroll-contain bg-[#07111f] text-white">
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <div>
+        <div className="mb-8 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-emerald-300/80">Papaya AI Lab</p>
             <h1 className="mt-2 text-3xl font-bold tracking-tight text-white md:text-4xl">Papaya AI Diagnostic Laboratory</h1>
             <p className="mt-2 max-w-2xl text-sm text-white/70">
               AI-powered visual analysis for papaya leaves, fruits, stems, whole plants, and multi-part plant observations.
             </p>
           </div>
-          <div className="glass-panel rounded-lg px-3 py-2 text-right">
+          <div className="glass-panel w-full rounded-lg px-3 py-2 text-left sm:w-auto sm:text-right">
             <p className="text-[10px] uppercase tracking-[0.2em] text-white/50">Status</p>
             <div className="mt-2 flex items-center gap-2">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -272,7 +272,7 @@ export default function PlantHealthPage() {
           ))}
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(300px,420px)_minmax(0,1fr)]">
           <section className="glass-panel rounded-2xl p-4 md:p-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
@@ -296,7 +296,7 @@ export default function PlantHealthPage() {
               }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={onDrop}
-              className={`group flex min-h-[300px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed p-4 text-center transition-all ${
+              className={`group flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed p-4 text-center transition-all sm:min-h-[300px] ${
                 isDragging ? "border-emerald-400 bg-emerald-500/10" : "border-white/15 bg-white/5 hover:border-emerald-400/70 hover:bg-white/10"
               }`}
             >
@@ -305,7 +305,7 @@ export default function PlantHealthPage() {
               {previewUrl ? (
                 <div className="w-full space-y-3">
                   <div className="overflow-hidden rounded-xl border border-white/10 bg-black/20">
-                    <img src={previewUrl} alt="Papaya plant preview" className="h-[260px] w-full object-cover" />
+                    <img src={previewUrl} alt="Papaya plant preview" className="h-auto max-h-[260px] min-h-[180px] w-full object-cover" />
                   </div>
                   <div className="flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-left">
                     <div className="min-w-0">
@@ -350,7 +350,7 @@ export default function PlantHealthPage() {
             </button>
           </section>
 
-          <section className="space-y-6">
+          <section className="min-w-0 space-y-6">
             <div className="glass-panel rounded-2xl p-5">
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -379,7 +379,7 @@ export default function PlantHealthPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-[10px] uppercase tracking-[0.2em] text-cyan-200/70">Hugging Face image model</p>
-                    <p className="mt-1 text-sm font-semibold text-white">
+                    <p className="mt-1 break-words text-sm font-semibold text-white">
                       {huggingFaceAnalysis?.model.name || "Not connected"}
                     </p>
                   </div>

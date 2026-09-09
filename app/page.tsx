@@ -84,7 +84,8 @@ async function fetchLiveWeather(locationQuery?: string) {
   return {
     temperature: current.main?.temp ?? 0,
     humidity: current.main?.humidity ?? 0,
-    windSpeed: current.wind?.speed ?? 0,
+    // OpenWeather returns wind speed in metres per second; the UI uses km/h.
+    windSpeed: Math.round((current.wind?.speed ?? 0) * 3.6),
     rainProbability: nextRainProb,
     rainActive,
     weatherLabel: weather.main || "Clear",
@@ -99,6 +100,7 @@ export default function DigitalTwinPage() {
   const [cameraView, setCameraView] = useState<CameraView>("default");
   const [selection, setSelection] = useState<SelectionType>(null);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  const [manualLampOn, setManualLampOn] = useState(false);
   const [locationName, setLocationName] = useState("Bengaluru");
   const [locationInput, setLocationInput] = useState("Bengaluru");
 
@@ -129,6 +131,7 @@ export default function DigitalTwinPage() {
 
   const handleReset = useCallback(() => {
     resetPlantState();
+    setManualLampOn(false);
     setSelection(null);
     setCameraView("reset");
   }, []);
@@ -198,6 +201,7 @@ export default function DigitalTwinPage() {
           onCameraViewCompleted={handleCameraViewCompleted}
           onSelect={setSelection}
           selection={selection}
+          manualLampOn={manualLampOn}
         />
       </div>
 
@@ -233,12 +237,12 @@ export default function DigitalTwinPage() {
       </div>
 
       {/* Left HUD - Plant Data */}
-      <div className="absolute top-16 left-4 z-10 pointer-events-none hidden md:block">
+      <div className="absolute top-16 bottom-4 left-4 z-10 pointer-events-none hidden lg:block overflow-y-auto max-h-[calc(100vh-5rem)]">
         <PlantHUD plantState={plantState} rainActive={envState.rainActive} />
       </div>
 
       {/* Right HUD - Weather + Controls */}
-      <div className="absolute top-16 right-4 z-10 pointer-events-none hidden md:flex flex-col gap-3 items-end">
+      <div className="absolute top-16 bottom-4 right-4 z-10 pointer-events-none hidden lg:flex max-h-[calc(100vh-5rem)] overflow-y-auto flex-col gap-3 items-end">
         <WeatherHUD plantState={plantState} envState={envState} locationName={locationName} />
         <ControlPanel
           cameraView={cameraView}
@@ -247,6 +251,8 @@ export default function DigitalTwinPage() {
           onTimeChange={handleTimeChange}
           rainActive={envState.rainActive}
           onRainToggle={handleRainToggle}
+          manualLampOn={manualLampOn}
+          onLampToggle={() => setManualLampOn((isOn) => !isOn)}
           windSpeed={envState.windSpeed}
           onWindChange={handleWindChange}
           plantHeight={plantState.height}
@@ -260,7 +266,7 @@ export default function DigitalTwinPage() {
 
       {/* Selection Panel - bottom left */}
       {selection && (
-        <div className="absolute bottom-4 left-4 z-20 hidden md:block">
+        <div className="absolute bottom-4 left-4 z-20 hidden lg:block max-w-[calc(100vw-2rem)]">
           <SelectionPanel
             type={selection}
             plantState={plantState}
@@ -273,7 +279,7 @@ export default function DigitalTwinPage() {
       {/* Mobile bottom sheet toggle */}
       <button
         onClick={() => setMobilePanelOpen(!mobilePanelOpen)}
-        className="md:hidden absolute bottom-4 right-4 z-20 glass-panel rounded-full w-12 h-12 flex items-center justify-center pointer-events-auto"
+        className="lg:hidden absolute bottom-4 right-4 z-20 glass-panel rounded-full w-12 h-12 flex items-center justify-center pointer-events-auto"
       >
         <div className="flex flex-col gap-1">
           <span className="w-5 h-0.5 bg-white" />
@@ -284,7 +290,7 @@ export default function DigitalTwinPage() {
 
       {/* Mobile panels */}
       {mobilePanelOpen && (
-        <div className="md:hidden absolute inset-0 z-30 bg-black/40 backdrop-blur-sm" onClick={() => setMobilePanelOpen(false)}>
+        <div className="lg:hidden absolute inset-0 z-30 bg-black/40 backdrop-blur-sm" onClick={() => setMobilePanelOpen(false)}>
           <div
             className="absolute bottom-0 left-0 right-0 max-h-[70vh] overflow-y-auto glass-panel-dark rounded-t-2xl p-4 space-y-3"
             onClick={(e) => e.stopPropagation()}
@@ -299,6 +305,8 @@ export default function DigitalTwinPage() {
               onTimeChange={handleTimeChange}
               rainActive={envState.rainActive}
               onRainToggle={handleRainToggle}
+              manualLampOn={manualLampOn}
+              onLampToggle={() => setManualLampOn((isOn) => !isOn)}
               windSpeed={envState.windSpeed}
               onWindChange={handleWindChange}
               plantHeight={plantState.height}
@@ -322,7 +330,7 @@ export default function DigitalTwinPage() {
 
       {/* Mobile selection panel (when not in menu) */}
       {selection && !mobilePanelOpen && (
-        <div className="md:hidden absolute bottom-20 left-4 right-16 z-20">
+        <div className="lg:hidden absolute bottom-20 left-4 right-16 z-20 max-w-[calc(100vw-5rem)]">
           <SelectionPanel
             type={selection}
             plantState={plantState}

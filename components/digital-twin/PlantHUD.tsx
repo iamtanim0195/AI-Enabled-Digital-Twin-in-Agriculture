@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { PlantState } from "@/lib/plant-state";
 
 interface PlantHUDProps {
@@ -8,6 +10,7 @@ interface PlantHUDProps {
 }
 
 export function PlantHUD({ plantState, rainActive }: PlantHUDProps) {
+  const [collapsed, setCollapsed] = useState(false);
   const rows: { label: string; value: string; color?: string }[] = [
     { label: "Health", value: `${plantState.healthScore}%`, color: getHealthColor(plantState.healthScore) },
     { label: "Status", value: plantState.healthStatus, color: getHealthColor(plantState.healthScore) },
@@ -31,8 +34,14 @@ export function PlantHUD({ plantState, rainActive }: PlantHUDProps) {
   ];
 
   return (
-    <div className="glass-panel rounded-xl p-4 w-[260px] pointer-events-auto">
-      <div className="flex items-center justify-between mb-3">
+    <div className="glass-panel rounded-xl p-4 w-[min(260px,calc(100vw-2rem))] max-h-full overflow-y-auto pointer-events-auto">
+      <button
+        type="button"
+        onClick={() => setCollapsed((value) => !value)}
+        className="w-full flex items-center justify-between mb-3 text-left"
+        aria-expanded={!collapsed}
+        aria-label={collapsed ? "Expand plant information" : "Collapse plant information"}
+      >
         <div>
           <h3 className="text-xs font-semibold text-white/60 uppercase tracking-widest">Plant Twin</h3>
           <p className="text-sm font-bold text-white mt-0.5">{plantState.plantId}</p>
@@ -44,21 +53,24 @@ export function PlantHUD({ plantState, rainActive }: PlantHUDProps) {
           </span>
           <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wider">Live</span>
         </div>
-      </div>
+        {collapsed ? <ChevronDown className="w-4 h-4 text-white/60" /> : <ChevronUp className="w-4 h-4 text-white/60" />}
+      </button>
 
-      <div className="space-y-1.5">
-        {rows.map((row) => (
-          <div key={row.label} className="flex items-center justify-between text-xs py-0.5">
-            <span className="text-white/50">{row.label}</span>
-            <span
-              className="font-mono font-semibold"
-              style={{ color: row.color || "rgba(255,255,255,0.9)" }}
-            >
-              {row.value}
-            </span>
-          </div>
-        ))}
-      </div>
+      {!collapsed && (
+        <div className="space-y-1.5">
+          {rows.map((row) => (
+            <div key={row.label} className="flex items-center justify-between text-xs py-0.5">
+              <span className="text-white/50">{row.label}</span>
+              <span
+                className="font-mono font-semibold"
+                style={{ color: row.color || "rgba(255,255,255,0.9)" }}
+              >
+                {row.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -73,45 +73,35 @@ export function ChiliPlant({
 
   const model = useMemo(() => {
     const cloned = scene.clone(true);
-    const leafColor = new THREE.Color(getLeafColor(health));
-    let meshIndex = 0;
 
     cloned.traverse((object) => {
       if (!(object as THREE.Mesh).isMesh) return;
 
       const mesh = object as THREE.Mesh;
-      const leafState = plantState.leafStates[meshIndex % plantState.leafStates.length] || "healthy";
-      const diseaseColor = getDiseaseColor(diseaseName, leafState);
-      meshIndex += 1;
       mesh.castShadow = true;
       mesh.receiveShadow = true;
 
       if (Array.isArray(mesh.material)) {
         mesh.material = mesh.material.map((material) => {
           const clonedMaterial = material.clone();
-          if ("color" in clonedMaterial) {
-            const materialWithColor = clonedMaterial as THREE.MeshStandardMaterial;
-            materialWithColor.color.lerp(new THREE.Color(diseaseColor || leafColor), diseaseColor ? 0.62 : 0.18);
-          }
           return clonedMaterial;
         });
       } else {
         const material = mesh.material.clone();
-        if ("color" in material) {
-          const materialWithColor = material as THREE.MeshStandardMaterial;
-          materialWithColor.color.lerp(new THREE.Color(diseaseColor || leafColor), diseaseColor ? 0.62 : 0.18);
-        }
         mesh.material = material;
       }
     });
 
     return cloned;
-  }, [diseaseName, health, plantState.leafStates, scene]);
+  }, [scene]);
 
   useFrame(({ clock }) => {
     if (!sway.current) return;
+    const windFactor = THREE.MathUtils.clamp(windSpeed / 40, 0, 1);
+    const gust = Math.sin(clock.elapsedTime * 1.7) + Math.sin(clock.elapsedTime * 2.9) * 0.35;
     sway.current.rotation.z =
-      Math.sin(clock.elapsedTime * 1.7) * Math.min(windSpeed / 40, 1) * 0.035;
+      gust * windFactor * 0.09;
+    sway.current.rotation.x = Math.cos(clock.elapsedTime * 1.35) * windFactor * 0.035;
   });
 
   return (
