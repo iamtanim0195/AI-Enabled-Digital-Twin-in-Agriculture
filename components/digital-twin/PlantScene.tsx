@@ -16,6 +16,7 @@ interface PlantSceneProps {
   onSelect: (type: SelectionType) => void;
   selection: SelectionType;
   manualLampOn?: boolean;
+  irrigationActive?: boolean;
   singlePlant?: boolean;
 }
 
@@ -27,6 +28,7 @@ export function PlantScene({
   onSelect,
   selection,
   manualLampOn = false,
+  irrigationActive = false,
   singlePlant = false,
 }: PlantSceneProps) {
   const plantPositions = singlePlant ? [[0, 0, 0]] as const : [
@@ -45,6 +47,7 @@ export function PlantScene({
   ] as const;
   const handlePlantSelect = useCallback(() => onSelect("plant"), [onSelect]);
   const handleSoilSelect = useCallback(() => onSelect("soil"), [onSelect]);
+  const handleIrrigationSelect = useCallback(() => onSelect("irrigation"), [onSelect]);
 
   const handleBackgroundClick = useCallback(() => {
     onSelect(null);
@@ -65,8 +68,11 @@ export function PlantScene({
           windSpeed={envState.windSpeed}
           manualLampOn={manualLampOn}
           soilMoisture={plantState.soilMoisture}
+          irrigationActive={irrigationActive}
           onSoilSelect={handleSoilSelect}
+          onIrrigationSelect={handleIrrigationSelect}
           soilSelected={selection === "soil"}
+          irrigationSelected={selection === "irrigation"}
         />
 
         {plantPositions.map((position, index) => (

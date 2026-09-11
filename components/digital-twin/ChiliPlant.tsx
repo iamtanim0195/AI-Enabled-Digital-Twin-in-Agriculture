@@ -1,7 +1,7 @@
 "use client";
 
 import * as THREE from "three";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import type { GroupProps } from "@react-three/fiber";
@@ -50,6 +50,13 @@ function getDiseaseColor(diseaseName: string | null, leafState: string) {
   return null;
 }
 
+function setMaterialColor(material: THREE.Material, color: string) {
+  if (!("color" in material) || !(material.color instanceof THREE.Color)) return;
+
+  material.color.set(color);
+  material.needsUpdate = true;
+}
+
 export function ChiliPlant({
   plantState,
   windSpeed,
@@ -70,6 +77,8 @@ export function ChiliPlant({
   const heightScale =
     THREE.MathUtils.clamp(plantState.height / 40, 0.75, 1.5) * growth;
   const diseaseName = plantState.disease.name;
+  const leafState = plantState.leafStates[0] ?? "healthy";
+  const leafColor = getDiseaseColor(diseaseName, leafState) ?? getLeafColor(health);
 
   const model = useMemo(() => {
     const cloned = scene.clone(true);
@@ -94,6 +103,48 @@ export function ChiliPlant({
 
     return cloned;
   }, [scene]);
+
+  useEffect(() => {
+    let hasNamedPlantParts = false;
+
+    model.traverse((object) => {
+      if (!(object as THREE.Mesh).isMesh) return;
+
+      const mesh = object as THREE.Mesh;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+
+      materials.forEach((material) => {
+        const standardMaterial = material as THREE.MeshStandardMaterial;
+        if (standardMaterial.map) {
+          standardMaterial.map.colorSpace = THREE.SRGBColorSpace;
+          standardMaterial.map.needsUpdate = true;
+        }
+
+        const materialName = material.name.toLowerCase();
+        const meshName = mesh.name.toLowerCase();
+        const isLeaf = /leaf|leaves|foliage/.test(`${meshName} ${materialName}`);
+        const isStem = /stem|trunk|branch/.test(`${meshName} ${materialName}`);
+
+        if (isLeaf) {
+          hasNamedPlantParts = true;
+          setMaterialColor(material, leafColor);
+        } else if (isStem) {
+          hasNamedPlantParts = true;
+          setMaterialColor(material, "#5b3a22");
+        }
+      });
+    });
+
+    if (!hasNamedPlantParts) {
+      model.traverse((object) => {
+        if (!(object as THREE.Mesh).isMesh) return;
+
+        const mesh = object as THREE.Mesh;
+        const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        materials.forEach((material) => setMaterialColor(material, leafColor));
+      });
+    }
+  }, [leafColor, model]);
 
   useFrame(({ clock }) => {
     if (!sway.current) return;

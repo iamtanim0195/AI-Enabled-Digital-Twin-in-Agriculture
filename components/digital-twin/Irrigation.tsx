@@ -13,10 +13,22 @@ interface IrrigationProps {
 export function Irrigation({ active, onSelect, isSelected }: IrrigationProps) {
   const pipeRef = useRef<Group>(null);
   const waterRef = useRef<Group>(null);
+  const pumpWaterRef = useRef<Group>(null);
 
   useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+
+    if (pumpWaterRef.current) {
+      pumpWaterRef.current.children.forEach((child, i) => {
+        const progress = (time * 1.4 + i * 0.16) % 1;
+        const arc = Math.sin(progress * Math.PI) * 0.42;
+        child.position.x = 0.7 - progress * 0.7;
+        child.position.y = 0.62 + arc - progress * 0.35;
+        (child as any).material.opacity = active ? 0.9 - progress * 0.5 : 0;
+      });
+    }
+
     if (waterRef.current) {
-      const time = state.clock.getElapsedTime();
       waterRef.current.children.forEach((child, i) => {
         if (active) {
           const offset = (time * 2 + i * 0.3) % 1;
@@ -68,6 +80,20 @@ export function Irrigation({ active, onSelect, isSelected }: IrrigationProps) {
           <meshStandardMaterial color="#444444" roughness={0.6} metalness={0.3} />
         </mesh>
 
+        {/* Water pump */}
+        <mesh position={[0.7, 0.28, 0]} castShadow>
+          <boxGeometry args={[0.5, 0.45, 0.42]} />
+          <meshStandardMaterial color={active ? "#167c5a" : "#374151"} roughness={0.4} metalness={0.5} />
+        </mesh>
+        <mesh position={[0.7, 0.56, 0]} castShadow>
+          <cylinderGeometry args={[0.12, 0.12, 0.1, 16]} />
+          <meshStandardMaterial color="#9ca3af" roughness={0.35} metalness={0.7} />
+        </mesh>
+        <mesh position={[0.7, 0.28, 0.22]}>
+          <sphereGeometry args={[0.045, 10, 10]} />
+          <meshBasicMaterial color={active ? "#34d399" : "#64748b"} />
+        </mesh>
+
         {/* Selection ring */}
         {isSelected && (
           <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -75,6 +101,23 @@ export function Irrigation({ active, onSelect, isSelected }: IrrigationProps) {
             <meshBasicMaterial color="#00E5FF" transparent opacity={0.6} />
           </mesh>
         )}
+      </group>
+
+      {/* Animated water stream from the pump outlet to the irrigation pipe */}
+      {active && (
+        <mesh position={[0.35, 0.71, 0]} rotation={[0, 0, -1.32]}>
+          <cylinderGeometry args={[0.018, 0.018, 0.75, 8]} />
+          <meshBasicMaterial color="#67e8f9" transparent opacity={0.55} />
+        </mesh>
+      )}
+
+      <group ref={pumpWaterRef}>
+        {Array.from({ length: 7 }, (_, i) => (
+          <mesh key={i} position={[0.7, 0.62, 0]}>
+            <sphereGeometry args={[0.035, 8, 8]} />
+            <meshBasicMaterial color="#67e8f9" transparent opacity={0} />
+          </mesh>
+        ))}
       </group>
 
       {/* Water droplets */}
@@ -89,7 +132,7 @@ export function Irrigation({ active, onSelect, isSelected }: IrrigationProps) {
 
       {/* Active indicator */}
       {active && (
-        <mesh position={[0.15, 0.5, 0]}>
+        <mesh position={[0.7, 0.57, 0]}>
           <sphereGeometry args={[0.03, 8, 8]} />
           <meshBasicMaterial color="#00E676" />
         </mesh>

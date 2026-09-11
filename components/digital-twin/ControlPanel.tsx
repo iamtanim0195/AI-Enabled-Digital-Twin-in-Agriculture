@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Focus, Eye, RotateCcw, CloudRain, Wind, Clock, Lightbulb, Ruler, MapPin } from "lucide-react";
+import { ChevronDown, ChevronUp, Focus, Eye, RotateCcw, CloudRain, Wind, Clock, Lightbulb, Ruler, MapPin, Droplets } from "lucide-react";
 import { TimeOfDay, TIME_DISPLAY } from "@/lib/plant-state";
 import { CameraView } from "./CameraControls";
 
@@ -12,6 +12,8 @@ interface ControlPanelProps {
   onTimeChange: (time: TimeOfDay) => void;
   rainActive: boolean;
   onRainToggle: () => void;
+  irrigationActive: boolean;
+  onIrrigationToggle: () => void;
   manualLampOn: boolean;
   onLampToggle: () => void;
   windSpeed: number;
@@ -31,6 +33,8 @@ export function ControlPanel({
   onTimeChange,
   rainActive,
   onRainToggle,
+  irrigationActive,
+  onIrrigationToggle,
   manualLampOn,
   onLampToggle,
   windSpeed,
@@ -141,6 +145,21 @@ export function ControlPanel({
           onChange={(e) => onWindChange(Number(e.target.value))}
           className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-cyan-400"
         />
+      </div>
+
+      {/* Irrigation pump toggle */}
+      <div className="mb-4">
+        <button
+          onClick={onIrrigationToggle}
+          className={`w-full py-2 rounded-md text-xs font-semibold transition-all flex items-center justify-center gap-2 ${
+            irrigationActive
+              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+              : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
+          }`}
+        >
+          <Droplets className="w-3.5 h-3.5" />
+          {irrigationActive ? "Pump Running" : "Start Irrigation"}
+        </button>
       </div>
 
       {/* Manual lamp toggle */}

@@ -9,7 +9,9 @@ import { WeatherHUD } from "@/components/digital-twin/WeatherHUD";
 import { ControlPanel } from "@/components/digital-twin/ControlPanel";
 import { SelectionPanel, SelectionType } from "@/components/digital-twin/SelectionPanel";
 import { CameraView } from "@/components/digital-twin/CameraControls";
-import { Activity, Wifi } from "lucide-react";
+import { subscribeToPlantData, type FirebasePlantData } from "@/lib/firebase";
+import Link from "next/link";
+import { Activity, FlaskConical, Stethoscope, Wifi } from "lucide-react";
 
 const PlantScene = dynamic(
   () => import("@/components/digital-twin/PlantScene").then((m) => m.PlantScene),
@@ -93,6 +95,39 @@ async function fetchLiveWeather(locationQuery?: string) {
   };
 }
 
+function readNumber(data: FirebasePlantData, ...keys: string[]) {
+  for (const key of keys) {
+    const value = data[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
+  }
+  return undefined;
+}
+
+function applyFirebasePlantData(data: FirebasePlantData) {
+  const plantUpdates = {
+    healthScore: readNumber(data, "healthScore", "health_score", "health"),
+    soilMoisture: readNumber(data, "soilMoisture", "soil_moisture", "soil moisture"),
+    temperature: readNumber(data, "temperature", "temp"),
+    humidity: readNumber(data, "humidity"),
+    light: readNumber(data, "light", "lightLevel", "light_level"),
+    diseaseRisk: readNumber(data, "diseaseRisk", "disease_risk"),
+    windSpeed: readNumber(data, "windSpeed", "wind_speed"),
+    rainProbability: readNumber(data, "rainProbability", "rain_probability"),
+  };
+
+  updatePlant(Object.fromEntries(Object.entries(plantUpdates).filter(([, value]) => value !== undefined)));
+
+  const rainActive = data.rainActive ?? data.rain_active;
+  const irrigation = data.irrigation;
+  const environmentUpdates = {
+    ...(typeof rainActive === "boolean" ? { rainActive } : {}),
+    ...(typeof plantUpdates.windSpeed === "number" ? { windSpeed: plantUpdates.windSpeed } : {}),
+  };
+  if (Object.keys(environmentUpdates).length > 0) updateEnvironment(environmentUpdates);
+  if (typeof irrigation === "boolean") updatePlant({ irrigation });
+}
+
 export default function DigitalTwinPage() {
   const store = usePlantStore();
   const plantState = store.plant;
@@ -101,6 +136,7 @@ export default function DigitalTwinPage() {
   const [selection, setSelection] = useState<SelectionType>(null);
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [manualLampOn, setManualLampOn] = useState(false);
+  const [irrigationActive, setIrrigationActive] = useState(false);
   const [locationName, setLocationName] = useState("Bengaluru");
   const [locationInput, setLocationInput] = useState("Bengaluru");
 
@@ -132,6 +168,7 @@ export default function DigitalTwinPage() {
   const handleReset = useCallback(() => {
     resetPlantState();
     setManualLampOn(false);
+    setIrrigationActive(false);
     setSelection(null);
     setCameraView("reset");
   }, []);
@@ -182,6 +219,15 @@ export default function DigitalTwinPage() {
     };
   }, [refreshWeather]);
 
+  useEffect(() => {
+    const unsubscribe = subscribeToPlantData(
+      (data) => applyFirebasePlantData(data),
+      (error) => console.error("Unable to load Firebase plant data:", error),
+    );
+
+    return unsubscribe;
+  }, []);
+
   const weatherStatus = envState.rainActive
     ? "Live • Raining"
     : plantState.rainProbability > 60
@@ -221,6 +267,26 @@ export default function DigitalTwinPage() {
           </div>
 
           <div className="flex items-center gap-2 pointer-events-auto">
+            <nav className="glass-panel rounded-lg p-1 flex items-center gap-1" aria-label="Primary navigation">
+              <Link
+                href="/simulation"
+                aria-label="Simulation"
+                title="Simulation"
+                className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <FlaskConical className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Simulation</span>
+              </Link>
+              <Link
+                href="/plant-health"
+                aria-label="Plant Health"
+                title="Plant Health"
+                className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                <Stethoscope className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Plant Health</span>
+              </Link>
+            </nav>
             <div className="glass-panel rounded-lg px-3 py-1.5 flex items-center gap-2">
               <Wifi className="w-3.5 h-3.5 text-emerald-400" />
               <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wider">Connected</span>
@@ -252,6 +318,8 @@ export default function DigitalTwinPage() {
           rainActive={envState.rainActive}
           onRainToggle={handleRainToggle}
           manualLampOn={manualLampOn}
+          irrigationActive={irrigationActive}
+          onIrrigationToggle={() => setIrrigationActive((isActive) => !isActive)}
           onLampToggle={() => setManualLampOn((isOn) => !isOn)}
           windSpeed={envState.windSpeed}
           onWindChange={handleWindChange}
@@ -306,6 +374,8 @@ export default function DigitalTwinPage() {
               rainActive={envState.rainActive}
               onRainToggle={handleRainToggle}
               manualLampOn={manualLampOn}
+              irrigationActive={irrigationActive}
+              onIrrigationToggle={() => setIrrigationActive((isActive) => !isActive)}
               onLampToggle={() => setManualLampOn((isOn) => !isOn)}
               windSpeed={envState.windSpeed}
               onWindChange={handleWindChange}

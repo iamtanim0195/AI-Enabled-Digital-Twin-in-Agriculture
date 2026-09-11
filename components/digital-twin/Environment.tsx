@@ -7,6 +7,7 @@ import { Clouds } from "./Clouds";
 import { Rain } from "./Rain";
 import { Soil } from "./Soil";
 import { LampPost } from "./LampPost";
+import { Irrigation } from "./Irrigation";
 
 interface EnvironmentProps {
   timeOfDay: TimeOfDay;
@@ -14,8 +15,11 @@ interface EnvironmentProps {
   windSpeed: number;
   manualLampOn: boolean;
   soilMoisture: number;
+  irrigationActive: boolean;
   onSoilSelect: () => void;
+  onIrrigationSelect: () => void;
   soilSelected: boolean;
+  irrigationSelected: boolean;
 }
 
 export function Environment({
@@ -24,8 +28,11 @@ export function Environment({
   windSpeed,
   manualLampOn,
   soilMoisture,
+  irrigationActive,
   onSoilSelect,
+  onIrrigationSelect,
   soilSelected,
+  irrigationSelected,
 }: EnvironmentProps) {
   const skyColors = useMemo(() => getSkyColors(timeOfDay), [timeOfDay]);
 
@@ -75,6 +82,12 @@ export function Environment({
 
       {/* Automatically illuminates the plot when daylight is low. */}
       <LampPost timeOfDay={timeOfDay} rainActive={rainActive} manualLampOn={manualLampOn} />
+
+      <Irrigation
+        active={irrigationActive}
+        onSelect={onIrrigationSelect}
+        isSelected={irrigationSelected}
+      />
 
       {/* Fog */}
       <fog attach="fog" args={[fogColor, fogNear, fogFar]} />
